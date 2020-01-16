@@ -40,14 +40,37 @@ def hh_parse(base_url, headers):
         div_vac = soup.find_all('div', attrs={'data-qa': 'vacancy-serp__vacancy'})
         for vac in div_vac:
             vac_link = vac.find('a', attrs={'data-qa': 'vacancy-serp__vacancy-title'})['href']
-            vacancy_list.append({'vac_link': vac_link})
+            vacancy_list.append(vac_link)
 
-    for i in vacancy_list:
-        print(i)
+    # for i in vacancy_list:
+    #     print(i)
     else:
         print('error')
     return vacancy_list
 
 hh_parse(baseurl, headers)
 
+def get_page_info(url, headers):
+    session = requests.session()
+    request = session.get(url, headers=headers)
+    inner_soup = BeautifulSoup(request.content, 'lxml')
+    try:
+        title = inner_soup.find('h1', attrs={'data-qa': 'vacancy-title'}).text
+    except:
+        pass
+    try:
+        salary = inner_soup.find('p', class_="vacancy-salary").text
+    except:
+        pass
+    try:
+        company_name = inner_soup.find('p', class_="vacancy-company-name-wrapper").text
+    except:
+        pass
+    try:
+        jobLocation = inner_soup.find('span', attrs={'itemprop': 'jobLocation'}).text
+    except:
+        pass
+    print(title)
 
+for i in hh_parse(baseurl, headers):
+    get_page_info(i, headers)

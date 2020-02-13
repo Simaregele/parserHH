@@ -1,5 +1,6 @@
 from bs4 import BeautifulSoup
 import requests
+import csv
 
 
 
@@ -50,27 +51,63 @@ def hh_parse(base_url, headers):
 
 hh_parse(baseurl, headers)
 
+na = 'NA'
+
 def get_page_info(url, headers):
     session = requests.session()
     request = session.get(url, headers=headers)
     inner_soup = BeautifulSoup(request.content, 'lxml')
+    work_dict = {}
     try:
-        title = inner_soup.find('h1', attrs={'data-qa': 'vacancy-title'}).text
+        work_dict['title'] = inner_soup.find('h1', attrs={'data-qa': 'vacancy-title'}).text
     except:
-        pass
+        work_dict['title'] = na
     try:
-        salary = inner_soup.find('p', class_="vacancy-salary").text
+        work_dict['salary'] = inner_soup.find('p', class_="vacancy-salary").text
     except:
-        pass
+        work_dict['salary'] = na
     try:
-        company_name = inner_soup.find('p', class_="vacancy-company-name-wrapper").text
+        work_dict['company_name'] = inner_soup.find('p', class_="vacancy-company-name-wrapper").text
     except:
-        pass
+        work_dict['company_name'] = na
     try:
-        jobLocation = inner_soup.find('span', attrs={'itemprop': 'jobLocation'}).text
+        work_dict['work_exp'] = inner_soup.find('span', attrs={'data-qa': 'vacancy-experience'}).text
     except:
-        pass
-    print(title)
+        work_dict['work_exp'] = na
+    try:
+        work_dict['job_location'] = inner_soup.find('span', attrs={'itemprop': 'jobLocation'}).text
+    except:
+        work_dict['job_location'] = na
+    try:
+        work_dict['duties'] = inner_soup.find('div', attrs={'data-qa': 'vacancy-description'}).find_all('ul')[0].text
+    except:
+        work_dict['duties'] = na
+
+    try:
+        skills = inner_soup.find_all('span', attrs={'data-qa: skills-element'})
+        skills_list = []
+        for skill in skills:
+            print(skill.text)
+            skills_list.append(skill.text)
+        work_dict['skills'] = skills_list
+    except:
+        work_dict['skills'] = na
+
+    try:
+        work_dict['start_date'] = inner_soup.find('div', class_='vacancy-section').text
+    except:
+        work_dict['start_date'] = na
+    return work_dict
+
+header_list = ['title', 'salary', 'company_name', 'work_exp', 'job_location', 'duties',
+               'skills', 'start_date']
+
+def write_to_csv(list):
+    with open('hh.csv', 'w') as file:
+        writer = csv.DictWriter(file)
+        writer.writeheader()
+        writer.writerow(('Url', 'Title', 'Salary', 'CompName', 'Experience', 'JobLoc'))
 
 for i in hh_parse(baseurl, headers):
     get_page_info(i, headers)
+    print(get_page_info(i, headers))
